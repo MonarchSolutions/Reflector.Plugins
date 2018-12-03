@@ -20,17 +20,7 @@ namespace Reflector.FePy.Languages
             this.addInMode = addInMode;
         }
 
-        public string Name
-        {
-            get
-            {
-                if (addInMode)
-                {
-                    return "IronPython";
-                }
-                return "IronPython";
-            }
-        }
+        public string Name => "IronPython";
 
         public string FileExtension => ".py";
 

@@ -179,16 +179,11 @@ namespace Reflector.Ps
                     else
                     {
                         IAssemblyReference assemblyReference = typeReference.Owner as IAssemblyReference;
-                        if (assemblyReference == null)
-                        {
-                            goto IL_7C;
-                        }
-                        result = assemblyReference;
+                        result = assemblyReference ?? throw new NotSupportedException();
                     }
                 }
                 return result;
             }
-        IL_7C:
             throw new NotSupportedException();
         }
 
@@ -662,14 +657,7 @@ namespace Reflector.Ps
                         }
                         stringWriter.Write(parameters[i].ParameterType.ToString());
                     }
-                    return string.Concat(new string[]
-                    {
-                        value.Name,
-                        "[",
-                        stringWriter.ToString(),
-                        "] : ",
-                        value.PropertyType.ToString()
-                    });
+                    return string.Concat(value.Name, "[", stringWriter.ToString(), "] : ", value.PropertyType.ToString());
                 }
             }
             return value.Name + " : " + value.PropertyType.ToString();

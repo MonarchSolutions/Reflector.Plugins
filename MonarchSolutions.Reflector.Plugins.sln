@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflector.Emit", "Reflector
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflector.Ps", "Reflector.Ps\Reflector.Ps.csproj", "{ABC89623-FA20-4203-A8B9-682BC58B2D68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflector.Js", "Reflector.Js\Reflector.Js.csproj", "{30B9C4F3-2ED1-49FB-9556-3E509B4EA690}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{ABC89623-FA20-4203-A8B9-682BC58B2D68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABC89623-FA20-4203-A8B9-682BC58B2D68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABC89623-FA20-4203-A8B9-682BC58B2D68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30B9C4F3-2ED1-49FB-9556-3E509B4EA690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30B9C4F3-2ED1-49FB-9556-3E509B4EA690}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30B9C4F3-2ED1-49FB-9556-3E509B4EA690}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30B9C4F3-2ED1-49FB-9556-3E509B4EA690}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

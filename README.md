@@ -1,6 +1,6 @@
 # Reflector Plugins
 
-Porting some classic Reflector plugins to Reflector 10+, since there are some changes on Reflector's interfaces.
+Porting some classic Reflector plugins to **Reflector 10+**, since there are some changes on Reflector's interfaces.
 
 If you are the author of these plugins and do not like what we're doing, send me an email and I will remove your plugins' code.
 
@@ -14,6 +14,9 @@ License: [Boost Software License - Version 1.0](https://github.com/lzybkr/CppCli
 
 ## Reflector.Ps
 Decompile to **PowerShell** language (only works for simple static methods without `using` / `while` etc.). Create by @[kzu](https://github.com/kzu). Ported from https://archive.codeplex.com/?p=reflectoraddins .
+
+## Reflector.Js
+Decompile to **JavaScript** language (has bugs but mostly right). Create by @[praeclarum](https://github.com/praeclarum). Ported from https://github.com/praeclarum/JavaScriptLanguage .
 
 ## Reflector.Emit
 Generate the given IL body using C# **Reflection.Emit**. Create by Jonathan de Halleux. Ported from https://archive.codeplex.com/?p=reflectoraddins .
