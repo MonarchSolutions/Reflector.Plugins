@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflector.FePy", "Reflector
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflector.CppCli", "Reflector.CppCli\Reflector.CppCli.csproj", "{2357FC28-0B01-422E-844A-DF1639C6DFBB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflector.Emit", "Reflector.Emit\Reflector.Emit.csproj", "{54DA937E-69C0-4D77-B5D6-8D3792DD1C15}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2357FC28-0B01-422E-844A-DF1639C6DFBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2357FC28-0B01-422E-844A-DF1639C6DFBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2357FC28-0B01-422E-844A-DF1639C6DFBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54DA937E-69C0-4D77-B5D6-8D3792DD1C15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54DA937E-69C0-4D77-B5D6-8D3792DD1C15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54DA937E-69C0-4D77-B5D6-8D3792DD1C15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54DA937E-69C0-4D77-B5D6-8D3792DD1C15}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
