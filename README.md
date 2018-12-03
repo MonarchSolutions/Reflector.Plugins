@@ -10,8 +10,7 @@ Decompile plugin for IronPython language. Ported from https://archive.codeplex.c
 ## Reflector.CppCli
 Decompile plugin for C++/CLI language by @[lzybkr](https://github.com/lzybkr). Ported from https://github.com/lzybkr/CppCliReflector .
 
-### [License](https://github.com/lzybkr/CppCliReflector/blob/master/README.md)
-Boost Software License - Version 1.0
+License: [Boost Software License - Version 1.0](https://github.com/lzybkr/CppCliReflector/blob/master/README.md)
 
 ------
 
