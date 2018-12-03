@@ -4,9 +4,9 @@ using System.Globalization;
 using System.IO;
 using Reflector.CodeModel;
 
-namespace Reflector.Emit.CodeModel
+namespace Reflector.Ps
 {
-    public static class Helper
+    internal static class Helper
     {
         public static string GetName(ITypeReference value)
         {
@@ -49,14 +49,14 @@ namespace Reflector.Emit.CodeModel
                 }
                 else
                 {
-                    string @namespace = value.Namespace;
-                    if (@namespace.Length == 0)
+                    string ns = value.Namespace;
+                    if (ns.Length == 0)
                     {
                         result = GetName(value);
                     }
                     else
                     {
-                        result = @namespace + "." + GetName(value);
+                        result = ns + "." + GetName(value);
                     }
                 }
                 return result;
@@ -178,15 +178,17 @@ namespace Reflector.Emit.CodeModel
                     }
                     else
                     {
-                        if (!(typeReference.Owner is IAssemblyReference assemblyReference))
+                        IAssemblyReference assemblyReference = typeReference.Owner as IAssemblyReference;
+                        if (assemblyReference == null)
                         {
-                            throw new NotSupportedException();
+                            goto IL_7C;
                         }
                         result = assemblyReference;
                     }
                 }
                 return result;
             }
+        IL_7C:
             throw new NotSupportedException();
         }
 
@@ -194,46 +196,45 @@ namespace Reflector.Emit.CodeModel
         {
             if (value is ITypeReference typeReference)
             {
-                ITypeReference typeReference2 = typeReference.Owner as ITypeReference;
-                bool result;
-                if (typeReference2 != null && !IsVisible(typeReference2, visibility))
+                if (typeReference.Owner is ITypeReference typeReference2)
                 {
-                    result = false;
+                    if (!IsVisible(typeReference2, visibility))
+                    {
+                        return false;
+                    }
+                }
+                ITypeDeclaration typeDeclaration = typeReference.Resolve();
+                bool result;
+                if (typeDeclaration == null)
+                {
+                    result = true;
                 }
                 else
                 {
-                    ITypeDeclaration typeDeclaration = typeReference.Resolve();
-                    if (typeDeclaration == null)
+                    switch (typeDeclaration.Visibility)
                     {
-                        result = true;
-                    }
-                    else
-                    {
-                        switch (typeDeclaration.Visibility)
-                        {
-                            case TypeVisibility.Private:
-                            case TypeVisibility.NestedPrivate:
-                                result = visibility.Private;
-                                break;
-                            case TypeVisibility.Public:
-                            case TypeVisibility.NestedPublic:
-                                result = visibility.Public;
-                                break;
-                            case TypeVisibility.NestedFamily:
-                                result = visibility.Family;
-                                break;
-                            case TypeVisibility.NestedAssembly:
-                                result = visibility.Assembly;
-                                break;
-                            case TypeVisibility.NestedFamilyAndAssembly:
-                                result = visibility.FamilyAndAssembly;
-                                break;
-                            case TypeVisibility.NestedFamilyOrAssembly:
-                                result = visibility.FamilyOrAssembly;
-                                break;
-                            default:
-                                throw new NotImplementedException();
-                        }
+                        case TypeVisibility.Private:
+                        case TypeVisibility.NestedPrivate:
+                            result = visibility.Private;
+                            break;
+                        case TypeVisibility.Public:
+                        case TypeVisibility.NestedPublic:
+                            result = visibility.Public;
+                            break;
+                        case TypeVisibility.NestedFamily:
+                            result = visibility.Family;
+                            break;
+                        case TypeVisibility.NestedAssembly:
+                            result = visibility.Assembly;
+                            break;
+                        case TypeVisibility.NestedFamilyAndAssembly:
+                            result = visibility.FamilyAndAssembly;
+                            break;
+                        case TypeVisibility.NestedFamilyOrAssembly:
+                            result = visibility.FamilyOrAssembly;
+                            break;
+                        default:
+                            throw new NotImplementedException();
                     }
                 }
                 return result;
@@ -243,15 +244,12 @@ namespace Reflector.Emit.CodeModel
 
         public static IMethodDeclaration GetMethod(ITypeDeclaration value, string methodName)
         {
-            if (value != null)
+            IMethodDeclarationCollection methods = value.Methods;
+            for (int i = 0; i < methods.Count; i++)
             {
-                IMethodDeclarationCollection methods = value.Methods;
-                for (int i = 0; i < methods.Count; i++)
+                if (methodName == methods[i].Name)
                 {
-                    if (methodName == methods[i].Name)
-                    {
-                        return methods[i];
-                    }
+                    return methods[i];
                 }
             }
             return null;
@@ -259,8 +257,7 @@ namespace Reflector.Emit.CodeModel
 
         private static ICollection GetInterfaces(ITypeDeclaration value)
         {
-            ArrayList arrayList = new ArrayList(0);
-            arrayList.AddRange(value.Interfaces);
+            ArrayList arrayList = new ArrayList(value.Interfaces);
             if (value.BaseType != null)
             {
                 ITypeDeclaration typeDeclaration = value.BaseType.Resolve();
@@ -275,18 +272,18 @@ namespace Reflector.Emit.CodeModel
             }
             foreach (object obj2 in value.Interfaces)
             {
-                ITypeReference typeReference2 = (ITypeReference)obj2;
-                ITypeDeclaration typeDeclaration2 = typeReference2.Resolve();
+                ITypeReference typeReference = (ITypeReference)obj2;
+                ITypeDeclaration typeDeclaration2 = typeReference.Resolve();
                 foreach (object obj3 in typeDeclaration2.Interfaces)
                 {
-                    ITypeReference typeReference3 = (ITypeReference)obj3;
-                    if (arrayList.Contains(typeReference3))
+                    ITypeReference typeReference2 = (ITypeReference)obj3;
+                    if (arrayList.Contains(typeReference2))
                     {
-                        arrayList.Remove(typeReference3);
+                        arrayList.Remove(typeReference2);
                     }
                 }
             }
-            ITypeReference[] array = new ITypeReference[checked((uint)arrayList.Count)];
+            ITypeReference[] array = new ITypeReference[arrayList.Count];
             arrayList.CopyTo(array, 0);
             return array;
         }
@@ -308,10 +305,11 @@ namespace Reflector.Emit.CodeModel
 
         public static ICollection GetFields(ITypeDeclaration value, IVisibilityConfiguration visibility)
         {
-            ArrayList arrayList = new ArrayList(0);
             IFieldDeclarationCollection fields = value.Fields;
+            ICollection result;
             if (fields.Count > 0)
             {
+                ArrayList arrayList = new ArrayList(0);
                 foreach (object obj in fields)
                 {
                     IFieldDeclaration value2 = (IFieldDeclaration)obj;
@@ -321,16 +319,22 @@ namespace Reflector.Emit.CodeModel
                     }
                 }
                 arrayList.Sort();
+                result = arrayList;
             }
-            return arrayList;
+            else
+            {
+                result = new IFieldDeclaration[0];
+            }
+            return result;
         }
 
         public static ICollection GetMethods(ITypeDeclaration value, IVisibilityConfiguration visibility)
         {
-            ArrayList arrayList = new ArrayList(0);
             IMethodDeclarationCollection methods = value.Methods;
+            ICollection result;
             if (methods.Count > 0)
             {
+                ArrayList arrayList = new ArrayList(0);
                 foreach (object obj in methods)
                 {
                     IMethodDeclaration value2 = (IMethodDeclaration)obj;
@@ -368,16 +372,22 @@ namespace Reflector.Emit.CodeModel
                     }
                 }
                 arrayList.Sort();
+                result = arrayList;
             }
-            return arrayList;
+            else
+            {
+                result = new IMethodDeclaration[0];
+            }
+            return result;
         }
 
         public static ICollection GetProperties(ITypeDeclaration value, IVisibilityConfiguration visibility)
         {
-            ArrayList arrayList = new ArrayList(0);
             IPropertyDeclarationCollection properties = value.Properties;
+            ICollection result;
             if (properties.Count > 0)
             {
+                ArrayList arrayList = new ArrayList(0);
                 foreach (object obj in properties)
                 {
                     IPropertyDeclaration value2 = (IPropertyDeclaration)obj;
@@ -387,16 +397,22 @@ namespace Reflector.Emit.CodeModel
                     }
                 }
                 arrayList.Sort();
+                result = arrayList;
             }
-            return arrayList;
+            else
+            {
+                result = new IPropertyDeclaration[0];
+            }
+            return result;
         }
 
         public static ICollection GetEvents(ITypeDeclaration value, IVisibilityConfiguration visibility)
         {
-            ArrayList arrayList = new ArrayList(0);
             IEventDeclarationCollection events = value.Events;
+            ICollection result;
             if (events.Count > 0)
             {
+                ArrayList arrayList = new ArrayList(0);
                 foreach (object obj in events)
                 {
                     IEventDeclaration value2 = (IEventDeclaration)obj;
@@ -406,16 +422,22 @@ namespace Reflector.Emit.CodeModel
                     }
                 }
                 arrayList.Sort();
+                result = arrayList;
             }
-            return arrayList;
+            else
+            {
+                result = new IEventDeclaration[0];
+            }
+            return result;
         }
 
         public static ICollection GetNestedTypes(ITypeDeclaration value, IVisibilityConfiguration visibility)
         {
-            ArrayList arrayList = new ArrayList(0);
             ITypeDeclarationCollection nestedTypes = value.NestedTypes;
+            ICollection result;
             if (nestedTypes.Count > 0)
             {
+                ArrayList arrayList = new ArrayList(0);
                 foreach (object obj in nestedTypes)
                 {
                     ITypeDeclaration value2 = (ITypeDeclaration)obj;
@@ -425,8 +447,13 @@ namespace Reflector.Emit.CodeModel
                     }
                 }
                 arrayList.Sort();
+                result = arrayList;
             }
-            return arrayList;
+            else
+            {
+                result = new ITypeDeclaration[0];
+            }
+            return result;
         }
 
         public static string GetName(IFieldReference value)
@@ -435,9 +462,12 @@ namespace Reflector.Emit.CodeModel
             IType declaringType = value.DeclaringType;
             if (fieldType.Equals(declaringType))
             {
-                if (fieldType is ITypeReference typeReference && IsEnumeration(typeReference))
+                if (fieldType is ITypeReference typeReference)
                 {
-                    return value.Name;
+                    if (IsEnumeration(typeReference))
+                    {
+                        return value.Name;
+                    }
                 }
             }
             return value.Name + " : " + value.FieldType.ToString();
@@ -569,7 +599,8 @@ namespace Reflector.Emit.CodeModel
             }
             else
             {
-                if (!(value.DeclaringType is IArrayType arrayType))
+                IArrayType arrayType = value.DeclaringType as IArrayType;
+                if (arrayType == null)
                 {
                     throw new NotSupportedException();
                 }
@@ -649,64 +680,31 @@ namespace Reflector.Emit.CodeModel
             return GetNameWithResolutionScope(value.DeclaringType as ITypeReference) + "." + GetName(value);
         }
 
-        public static IMethodDeclaration GetSetMethod(IPropertyReference value)
-        {
-            IPropertyDeclaration propertyDeclaration = value.Resolve();
-            IMethodDeclaration result;
-            if (propertyDeclaration.SetMethod != null)
-            {
-                result = propertyDeclaration.SetMethod.Resolve();
-            }
-            else
-            {
-                result = null;
-            }
-            return result;
-        }
-
-        public static IMethodDeclaration GetGetMethod(IPropertyReference value)
-        {
-            IPropertyDeclaration propertyDeclaration = value.Resolve();
-            IMethodDeclaration result;
-            if (propertyDeclaration.GetMethod != null)
-            {
-                result = propertyDeclaration.GetMethod.Resolve();
-            }
-            else
-            {
-                result = null;
-            }
-            return result;
-        }
-
-        public static bool IsStatic(IPropertyReference value)
-        {
-            IMethodDeclaration setMethod = GetSetMethod(value);
-            IMethodDeclaration getMethod = GetGetMethod(value);
-            bool flag = false;
-            flag |= (setMethod != null && setMethod.Static);
-            return flag | (getMethod != null && getMethod.Static);
-        }
-
         public static MethodVisibility GetVisibility(IPropertyReference value)
         {
-            IMethodDeclaration getMethod = GetGetMethod(value);
-            IMethodDeclaration setMethod = GetSetMethod(value);
             MethodVisibility result = MethodVisibility.Public;
-            if (setMethod != null && getMethod != null)
+            IPropertyDeclaration propertyDeclaration = value.Resolve();
+            if (propertyDeclaration != null)
             {
-                if (getMethod.Visibility == setMethod.Visibility)
+                IMethodReference setMethod = propertyDeclaration.SetMethod;
+                IMethodDeclaration methodDeclaration = setMethod?.Resolve();
+                IMethodReference getMethod = propertyDeclaration.GetMethod;
+                IMethodDeclaration methodDeclaration2 = getMethod?.Resolve();
+                if (methodDeclaration != null && methodDeclaration2 != null)
                 {
-                    result = getMethod.Visibility;
+                    if (methodDeclaration2.Visibility == methodDeclaration.Visibility)
+                    {
+                        result = methodDeclaration2.Visibility;
+                    }
                 }
-            }
-            else if (setMethod != null)
-            {
-                result = setMethod.Visibility;
-            }
-            else if (getMethod != null)
-            {
-                result = getMethod.Visibility;
+                else if (methodDeclaration != null)
+                {
+                    result = methodDeclaration.Visibility;
+                }
+                else if (methodDeclaration2 != null)
+                {
+                    result = methodDeclaration2.Visibility;
+                }
             }
             return result;
         }
@@ -909,554 +907,93 @@ namespace Reflector.Emit.CodeModel
             return flag;
         }
 
-        public static int GetInstructionSize(IInstruction value)
+        public static bool IsBaseMethod(IMethodReference value, IMethodReference baseMethod)
         {
-            int num = 0;
-            if (value.Code < 256)
+            bool result;
+            if (value.Name != baseMethod.Name)
             {
-                num++;
+                result = false;
             }
-            else if (value.Code < 65536)
+            else
             {
-                num += 2;
-            }
-            switch (GetOperandType(value.Code))
-            {
-                case OperandType.BranchTarget:
-                case OperandType.Field:
-                case OperandType.Int32:
-                case OperandType.Method:
-                case OperandType.Signature:
-                case OperandType.String:
-                case OperandType.Token:
-                case OperandType.Type:
-                case OperandType.Single:
-                    return num + 4;
-                case OperandType.Int64:
-                case OperandType.Double:
-                    return num + 8;
-                case OperandType.None:
-                    return num;
-                case OperandType.Switch:
-                    {
-                        num += 4;
-                        int[] array = (int[])value.Value;
-                        return num + array.Length * 4;
-                    }
-                case OperandType.Variable:
-                    return num + 2;
-                case OperandType.ShortBranchTarget:
-                case OperandType.SByte:
-                case OperandType.ShortVariable:
-                    return num + 1;
-            }
-            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Unknown operand type for operator '{0}'.", new object[]
-            {
-                value.Code.ToString("x4")
-            }));
-        }
-
-        private static OperandType GetOperandType(int code)
-        {
-            switch (code)
-            {
-                case 0:
-                    return OperandType.None;
-                case 1:
-                    return OperandType.None;
-                case 2:
-                    return OperandType.None;
-                case 3:
-                    return OperandType.None;
-                case 4:
-                    return OperandType.None;
-                case 5:
-                    return OperandType.None;
-                case 6:
-                    return OperandType.None;
-                case 7:
-                    return OperandType.None;
-                case 8:
-                    return OperandType.None;
-                case 9:
-                    return OperandType.None;
-                case 10:
-                    return OperandType.None;
-                case 11:
-                    return OperandType.None;
-                case 12:
-                    return OperandType.None;
-                case 13:
-                    return OperandType.None;
-                case 14:
-                    return OperandType.ShortVariable;
-                case 15:
-                    return OperandType.ShortVariable;
-                case 16:
-                    return OperandType.ShortVariable;
-                case 17:
-                    return OperandType.ShortVariable;
-                case 18:
-                    return OperandType.ShortVariable;
-                case 19:
-                    return OperandType.ShortVariable;
-                case 20:
-                    return OperandType.None;
-                case 21:
-                    return OperandType.None;
-                case 22:
-                    return OperandType.None;
-                case 23:
-                    return OperandType.None;
-                case 24:
-                    return OperandType.None;
-                case 25:
-                    return OperandType.None;
-                case 26:
-                    return OperandType.None;
-                case 27:
-                    return OperandType.None;
-                case 28:
-                    return OperandType.None;
-                case 29:
-                    return OperandType.None;
-                case 30:
-                    return OperandType.None;
-                case 31:
-                    return OperandType.SByte;
-                case 32:
-                    return OperandType.Int32;
-                case 33:
-                    return OperandType.Int64;
-                case 34:
-                    return OperandType.Single;
-                case 35:
-                    return OperandType.Double;
-                case 37:
-                    return OperandType.None;
-                case 38:
-                    return OperandType.None;
-                case 39:
-                    return OperandType.Method;
-                case 40:
-                    return OperandType.Method;
-                case 41:
-                    return OperandType.Signature;
-                case 42:
-                    return OperandType.None;
-                case 43:
-                    return OperandType.ShortBranchTarget;
-                case 44:
-                    return OperandType.ShortBranchTarget;
-                case 45:
-                    return OperandType.ShortBranchTarget;
-                case 46:
-                    return OperandType.ShortBranchTarget;
-                case 47:
-                    return OperandType.ShortBranchTarget;
-                case 48:
-                    return OperandType.ShortBranchTarget;
-                case 49:
-                    return OperandType.ShortBranchTarget;
-                case 50:
-                    return OperandType.ShortBranchTarget;
-                case 51:
-                    return OperandType.ShortBranchTarget;
-                case 52:
-                    return OperandType.ShortBranchTarget;
-                case 53:
-                    return OperandType.ShortBranchTarget;
-                case 54:
-                    return OperandType.ShortBranchTarget;
-                case 55:
-                    return OperandType.ShortBranchTarget;
-                case 56:
-                    return OperandType.BranchTarget;
-                case 57:
-                    return OperandType.BranchTarget;
-                case 58:
-                    return OperandType.BranchTarget;
-                case 59:
-                    return OperandType.BranchTarget;
-                case 60:
-                    return OperandType.BranchTarget;
-                case 61:
-                    return OperandType.BranchTarget;
-                case 62:
-                    return OperandType.BranchTarget;
-                case 63:
-                    return OperandType.BranchTarget;
-                case 64:
-                    return OperandType.BranchTarget;
-                case 65:
-                    return OperandType.BranchTarget;
-                case 66:
-                    return OperandType.BranchTarget;
-                case 67:
-                    return OperandType.BranchTarget;
-                case 68:
-                    return OperandType.BranchTarget;
-                case 69:
-                    return OperandType.Switch;
-                case 70:
-                    return OperandType.None;
-                case 71:
-                    return OperandType.None;
-                case 72:
-                    return OperandType.None;
-                case 73:
-                    return OperandType.None;
-                case 74:
-                    return OperandType.None;
-                case 75:
-                    return OperandType.None;
-                case 76:
-                    return OperandType.None;
-                case 77:
-                    return OperandType.None;
-                case 78:
-                    return OperandType.None;
-                case 79:
-                    return OperandType.None;
-                case 80:
-                    return OperandType.None;
-                case 81:
-                    return OperandType.None;
-                case 82:
-                    return OperandType.None;
-                case 83:
-                    return OperandType.None;
-                case 84:
-                    return OperandType.None;
-                case 85:
-                    return OperandType.None;
-                case 86:
-                    return OperandType.None;
-                case 87:
-                    return OperandType.None;
-                case 88:
-                    return OperandType.None;
-                case 89:
-                    return OperandType.None;
-                case 90:
-                    return OperandType.None;
-                case 91:
-                    return OperandType.None;
-                case 92:
-                    return OperandType.None;
-                case 93:
-                    return OperandType.None;
-                case 94:
-                    return OperandType.None;
-                case 95:
-                    return OperandType.None;
-                case 96:
-                    return OperandType.None;
-                case 97:
-                    return OperandType.None;
-                case 98:
-                    return OperandType.None;
-                case 99:
-                    return OperandType.None;
-                case 100:
-                    return OperandType.None;
-                case 101:
-                    return OperandType.None;
-                case 102:
-                    return OperandType.None;
-                case 103:
-                    return OperandType.None;
-                case 104:
-                    return OperandType.None;
-                case 105:
-                    return OperandType.None;
-                case 106:
-                    return OperandType.None;
-                case 107:
-                    return OperandType.None;
-                case 108:
-                    return OperandType.None;
-                case 109:
-                    return OperandType.None;
-                case 110:
-                    return OperandType.None;
-                case 111:
-                    return OperandType.Method;
-                case 112:
-                    return OperandType.Type;
-                case 113:
-                    return OperandType.Type;
-                case 114:
-                    return OperandType.String;
-                case 115:
-                    return OperandType.Method;
-                case 116:
-                    return OperandType.Type;
-                case 117:
-                    return OperandType.Type;
-                case 118:
-                    return OperandType.None;
-                case 121:
-                    return OperandType.Type;
-                case 122:
-                    return OperandType.None;
-                case 123:
-                    return OperandType.Field;
-                case 124:
-                    return OperandType.Field;
-                case 125:
-                    return OperandType.Field;
-                case 126:
-                    return OperandType.Field;
-                case 127:
-                    return OperandType.Field;
-                case 128:
-                    return OperandType.Field;
-                case 129:
-                    return OperandType.Type;
-                case 130:
-                    return OperandType.None;
-                case 131:
-                    return OperandType.None;
-                case 132:
-                    return OperandType.None;
-                case 133:
-                    return OperandType.None;
-                case 134:
-                    return OperandType.None;
-                case 135:
-                    return OperandType.None;
-                case 136:
-                    return OperandType.None;
-                case 137:
-                    return OperandType.None;
-                case 138:
-                    return OperandType.None;
-                case 139:
-                    return OperandType.None;
-                case 140:
-                    return OperandType.Type;
-                case 141:
-                    return OperandType.Type;
-                case 142:
-                    return OperandType.None;
-                case 143:
-                    return OperandType.Type;
-                case 144:
-                    return OperandType.None;
-                case 145:
-                    return OperandType.None;
-                case 146:
-                    return OperandType.None;
-                case 147:
-                    return OperandType.None;
-                case 148:
-                    return OperandType.None;
-                case 149:
-                    return OperandType.None;
-                case 150:
-                    return OperandType.None;
-                case 151:
-                    return OperandType.None;
-                case 152:
-                    return OperandType.None;
-                case 153:
-                    return OperandType.None;
-                case 154:
-                    return OperandType.None;
-                case 155:
-                    return OperandType.None;
-                case 156:
-                    return OperandType.None;
-                case 157:
-                    return OperandType.None;
-                case 158:
-                    return OperandType.None;
-                case 159:
-                    return OperandType.None;
-                case 160:
-                    return OperandType.None;
-                case 161:
-                    return OperandType.None;
-                case 162:
-                    return OperandType.None;
-                case 163:
-                    return OperandType.Type;
-                case 164:
-                    return OperandType.Type;
-                case 165:
-                    return OperandType.Type;
-                case 179:
-                    return OperandType.None;
-                case 180:
-                    return OperandType.None;
-                case 181:
-                    return OperandType.None;
-                case 182:
-                    return OperandType.None;
-                case 183:
-                    return OperandType.None;
-                case 184:
-                    return OperandType.None;
-                case 185:
-                    return OperandType.None;
-                case 186:
-                    return OperandType.None;
-                case 194:
-                    return OperandType.Type;
-                case 195:
-                    return OperandType.None;
-                case 198:
-                    return OperandType.Type;
-                case 208:
-                    return OperandType.Token;
-                case 209:
-                    return OperandType.None;
-                case 210:
-                    return OperandType.None;
-                case 211:
-                    return OperandType.None;
-                case 212:
-                    return OperandType.None;
-                case 213:
-                    return OperandType.None;
-                case 214:
-                    return OperandType.None;
-                case 215:
-                    return OperandType.None;
-                case 216:
-                    return OperandType.None;
-                case 217:
-                    return OperandType.None;
-                case 218:
-                    return OperandType.None;
-                case 219:
-                    return OperandType.None;
-                case 220:
-                    return OperandType.None;
-                case 221:
-                    return OperandType.BranchTarget;
-                case 222:
-                    return OperandType.ShortBranchTarget;
-                case 223:
-                    return OperandType.None;
-                case 224:
-                    return OperandType.None;
-                case 248:
-                    return OperandType.None;
-                case 249:
-                    return OperandType.None;
-                case 250:
-                    return OperandType.None;
-                case 251:
-                    return OperandType.None;
-                case 252:
-                    return OperandType.None;
-                case 253:
-                    return OperandType.None;
-                case 254:
-                    return OperandType.None;
-                case 255:
-                    return OperandType.None;
-            }
-            switch (code)
-            {
-                case 65024:
-                    return OperandType.None;
-                case 65025:
-                    return OperandType.None;
-                case 65026:
-                    return OperandType.None;
-                case 65027:
-                    return OperandType.None;
-                case 65028:
-                    return OperandType.None;
-                case 65029:
-                    return OperandType.None;
-                case 65030:
-                    return OperandType.Method;
-                case 65031:
-                    return OperandType.Method;
-                case 65033:
-                    return OperandType.Variable;
-                case 65034:
-                    return OperandType.Variable;
-                case 65035:
-                    return OperandType.Variable;
-                case 65036:
-                    return OperandType.Variable;
-                case 65037:
-                    return OperandType.Variable;
-                case 65038:
-                    return OperandType.Variable;
-                case 65039:
-                    return OperandType.None;
-                case 65041:
-                    return OperandType.None;
-                case 65042:
-                    return OperandType.SByte;
-                case 65043:
-                    return OperandType.None;
-                case 65044:
-                    return OperandType.None;
-                case 65045:
-                    return OperandType.Type;
-                case 65046:
-                    return OperandType.Type;
-                case 65047:
-                    return OperandType.None;
-                case 65048:
-                    return OperandType.None;
-                case 65050:
-                    return OperandType.None;
-                case 65052:
-                    return OperandType.Type;
-                case 65053:
-                    return OperandType.None;
-                case 65054:
-                    return OperandType.None;
-            }
-            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Unknown IL instruction '{0}'.", new object[]
-            {
-                code.ToString("X4", CultureInfo.InvariantCulture)
-            }));
-        }
-
-        public static int GetMethodBodySize(IMethodDeclaration value)
-        {
-            int num = 0;
-            if (value.Body is IMethodBody methodBody)
-            {
-                IInstructionCollection instructions = methodBody.Instructions;
-                if (instructions.Count != 0)
+                if (value.GenericMethod != null)
                 {
-                    IInstruction instruction = instructions[instructions.Count - 1];
-                    num = num + instruction.Offset + GetInstructionSize(instruction);
+                    value = value.GenericMethod;
+                }
+                if (baseMethod.GenericMethod != null)
+                {
+                    baseMethod = baseMethod.GenericMethod;
+                }
+                if (!value.ReturnType.Type.Equals(baseMethod.ReturnType.Type))
+                {
+                    result = false;
+                }
+                else if (value.HasThis != baseMethod.HasThis && value.ExplicitThis != baseMethod.ExplicitThis && value.CallingConvention != baseMethod.CallingConvention)
+                {
+                    result = false;
+                }
+                else if (value.Parameters.Count != baseMethod.Parameters.Count)
+                {
+                    result = false;
+                }
+                else
+                {
+                    for (int i = 0; i < value.Parameters.Count; i++)
+                    {
+                        if (!value.Parameters[i].ParameterType.Equals(baseMethod.Parameters[i].ParameterType))
+                        {
+                            return false;
+                        }
+                    }
+                    if (value.GenericArguments.Count != baseMethod.GenericArguments.Count)
+                    {
+                        result = false;
+                    }
+                    else
+                    {
+                        IMethodDeclaration methodDeclaration = value.Resolve();
+                        IMethodDeclaration methodDeclaration2 = baseMethod.Resolve();
+                        result = (methodDeclaration != null && methodDeclaration2 != null && methodDeclaration.Virtual && methodDeclaration2.Virtual && IsBaseType(methodDeclaration.DeclaringType, methodDeclaration2.DeclaringType));
+                    }
                 }
             }
-            return num;
+            return result;
         }
 
-        private enum OperandType
+        private static bool IsBaseType(IType type, IType baseType)
         {
-            BranchTarget,
-            ShortBranchTarget = 15,
-            Field = 1,
-            Int32,
-            Int64,
-            Method,
-            None,
-            Phi,
-            Double,
-            Signature = 9,
-            String,
-            Switch,
-            Token,
-            Type,
-            Variable,
-            SByte = 16,
-            Single,
-            ShortVariable
+            if (type is ITypeReference typeReference && baseType is ITypeReference typeReference2)
+            {
+                ITypeDeclaration typeDeclaration = typeReference.Resolve();
+                if (typeDeclaration != null)
+                {
+                    if (typeDeclaration.BaseType != null && typeDeclaration.BaseType.Equals(baseType))
+                    {
+                        return true;
+                    }
+                    foreach (object obj in typeDeclaration.Interfaces)
+                    {
+                        ITypeReference typeReference3 = (ITypeReference)obj;
+                        if (typeReference3.Equals(baseType))
+                        {
+                            return true;
+                        }
+                    }
+                    if (typeDeclaration.BaseType != null && IsBaseType(typeDeclaration.BaseType, baseType))
+                    {
+                        return true;
+                    }
+                    foreach (object obj2 in typeDeclaration.Interfaces)
+                    {
+                        ITypeReference typeReference3 = (ITypeReference)obj2;
+                        if (IsBaseType(typeReference3, baseType))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
     }
 }

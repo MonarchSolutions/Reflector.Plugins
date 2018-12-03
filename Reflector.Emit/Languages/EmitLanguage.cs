@@ -1,6 +1,7 @@
 ﻿using System;
 using Reflector.CodeModel;
 using Reflector.Disassembler;
+using Reflector.Emit.Languages;
 
 namespace Reflector.Emit.ReflectionEmitLanguage
 {

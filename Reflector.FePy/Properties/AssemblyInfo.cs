@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Reflector.FePy")]
+[assembly: AssemblyTitle("IronPythonAddIn")]
 [assembly: AssemblyDescription("IronPython decompile plugin for Reflector 10+.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Monarch Solutions")]

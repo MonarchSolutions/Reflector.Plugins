@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{54DA937E-69C0-4D77-B5D6-8D3792DD1C15}</ProjectGuid>
+    <ProjectGuid>{ABC89623-FA20-4203-A8B9-682BC58B2D68}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Reflector.Emit</RootNamespace>
-    <AssemblyName>Reflector.Emit</AssemblyName>
+    <RootNamespace>Reflector.Ps</RootNamespace>
+    <AssemblyName>Reflector.Ps</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>4096</FileAlignment>
     <TargetFrameworkProfile />
@@ -37,16 +37,14 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeModel\CodeModelSearch.cs" />
-    <Compile Include="Helper.cs" />
-    <Compile Include="CodeModel\InstructionHelper.cs" />
-    <Compile Include="CodeModel\OperandType.cs" />
     <Compile Include="CodeModel\Visitor.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="Languages\PowerShellLanguage.cs" />
+    <Compile Include="Languages\PowerShellLanguagePackage.cs" />
+    <Compile Include="Languages\PowerShellLanguageWriter.cs" />
+    <Compile Include="Languages\TextFormatter.cs" />
+    <Compile Include="Languages\VisitorWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Languages\EmitFormatter.cs" />
-    <Compile Include="Languages\EmitLanguage.cs" />
-    <Compile Include="Languages\EmitLanguagePackage.cs" />
-    <Compile Include="Languages\EmitLanguageWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Reflector">

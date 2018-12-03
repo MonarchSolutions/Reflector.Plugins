@@ -1,7 +1,6 @@
 ﻿using Reflector.CodeModel;
-using Reflector.Emit.CodeModel;
 
-namespace Reflector.Emit.ReflectionEmitLanguage
+namespace Reflector.Emit.Languages
 {
 	internal sealed class EmitFormatter : IFormatter
 	{
@@ -31,7 +30,7 @@ namespace Reflector.Emit.ReflectionEmitLanguage
 
 		public void WriteComment(string value)
 		{
-			string value2 = string.Format("// {0}", value);
+			string value2 = $"// {value}";
 			_formatter.WriteComment(value2);
 			_formatter.WriteLine();
 		}
@@ -108,11 +107,7 @@ namespace Reflector.Emit.ReflectionEmitLanguage
 
 		public void WriteMethodInvocation(string instanceName, string methodName, bool endStatement, params string[] args)
 		{
-			Write("{0}.{1}(", new object[]
-			{
-				instanceName,
-				methodName
-			});
+			Write("{0}.{1}(", instanceName, methodName);
 			if (args.Length > 3)
 			{
 				_formatter.WriteLine();
@@ -157,19 +152,12 @@ namespace Reflector.Emit.ReflectionEmitLanguage
 
 		public void WriteVariableDeclaration(string variableType, string variableName)
 		{
-			Write("{0} {1}", new object[]
-			{
-				variableType,
-				variableName
-			});
+			Write("{0} {1}", variableType, variableName);
 		}
 
 		public void WriteVariableDeclaration(string variableType, string variableName, object target)
 		{
-			Write("{0} ", new object[]
-			{
-				variableType
-			});
+			Write("{0} ", variableType);
 			WriteReference(variableName, "", target);
 		}
 
@@ -198,11 +186,7 @@ namespace Reflector.Emit.ReflectionEmitLanguage
 
 		public void WriteAssignType(string instance, string property, IType type)
 		{
-			Write("{0}.{1}", new object[]
-			{
-				instance,
-				property
-			});
+			Write("{0}.{1}", instance, property);
 			WriteEqual();
 			WriteKeyword("new");
 			Write(" ");
@@ -216,26 +200,17 @@ namespace Reflector.Emit.ReflectionEmitLanguage
 		{
 			if ((visibility & MethodVisibility.Assembly) != MethodVisibility.PrivateScope)
 			{
-				Write("{0}.Attributes |= System.CodeDom.MethodVisibility.Assembly", new object[]
-				{
-					instance
-				});
+				Write("{0}.Attributes |= System.CodeDom.MethodVisibility.Assembly", instance);
 				WriteEndStatement();
 			}
 			if ((visibility & MethodVisibility.Family) != MethodVisibility.PrivateScope)
 			{
-				Write("{0}.Attributes |= System.CodeDom.MethodVisibility.Family", new object[]
-				{
-					instance
-				});
+				Write("{0}.Attributes |= System.CodeDom.MethodVisibility.Family", instance);
 				WriteEndStatement();
 			}
 			if ((visibility & MethodVisibility.Private) != MethodVisibility.PrivateScope)
 			{
-				Write("{0}.Attributes |= System.CodeDom.MethodVisibility.Private", new object[]
-				{
-					instance
-				});
+				Write("{0}.Attributes |= System.CodeDom.MethodVisibility.Private", instance);
 				WriteEndStatement();
 			}
 		}

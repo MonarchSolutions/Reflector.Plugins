@@ -12,6 +12,9 @@ Decompile to **C++/CLI** language. Create by @[lzybkr](https://github.com/lzybkr
 
 License: [Boost Software License - Version 1.0](https://github.com/lzybkr/CppCliReflector/blob/master/README.md)
 
+## Reflector.Ps
+Decompile to **PowerShell** language (only works for simple static methods without `using``while` etc.). Create by @[kzu](https://github.com/kzu). Ported from https://archive.codeplex.com/?p=reflectoraddins .
+
 ## Reflector.Emit
 Generate the given IL body using C# **Reflection.Emit**. Create by Jonathan de Halleux. Ported from https://archive.codeplex.com/?p=reflectoraddins .
 
